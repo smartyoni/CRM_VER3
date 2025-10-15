@@ -330,6 +330,17 @@ button {
     min-height: 7.2em;
 }
 
+.form-group textarea.large {
+    min-height: 200px;
+}
+
+.form-hint {
+    font-size: 0.875rem;
+    color: #7f8c8d;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+}
+
 /* --- Detail Panel Specifics --- */
 .basic-info-container { padding: 15px; }
 .info-section { margin-bottom: 20px; border: 1px solid #eee; padding: 15px; border-radius: 5px; }

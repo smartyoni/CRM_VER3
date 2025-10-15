@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PROPERTY_STATUSES } from '../../constants';
 import { generateId, formatDateTime } from '../../utils/helpers';
+import { parsePropertyDetails } from '../../utils/textParser';
 
 const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) => {
   const [isAdding, setIsAdding] = useState(false);
@@ -74,13 +75,13 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
 
       const handleInfoChange = (e) => {
         const info = e.target.value;
-        const lines = info.split('\n');
-        const secondLine = lines.length > 1 ? lines[1].trim() : '';
+        const { propertyName, contactNumber } = parsePropertyDetails(info);
 
         setPropertyData({
           ...propertyData,
           info: info,
-          roomName: secondLine || propertyData.roomName
+          roomName: propertyName || propertyData.roomName,
+          agencyPhone: contactNumber || propertyData.agencyPhone
         });
       };
 
@@ -105,9 +106,25 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
               <button className="btn-close" onClick={onClose}>×</button>
             </div>
             <div className="form-grid">
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label>매물정보 (전체 텍스트 붙여넣기)</label>
+                <textarea
+                  className="large"
+                  placeholder="매물 정보를 붙여넣으세요&#10;2번째 줄 → 호실명 자동입력&#10;마지막 줄 → 연락처 자동입력"
+                  value={propertyData.info}
+                  onChange={handleInfoChange}
+                ></textarea>
+                <p className="form-hint">
+                  매물 정보를 붙여넣으면 2번째 줄이 호실명, 마지막 줄이 연락처로 자동 입력됩니다.
+                </p>
+              </div>
               <div className="form-group">
                 <label>호실명</label>
-                <input type="text" placeholder="예: 301호, 강남아파트" value={propertyData.roomName} onChange={(e) => setPropertyData({...propertyData, roomName: e.target.value})} />
+                <input type="text" placeholder="자동 입력되지만 수정 가능합니다" value={propertyData.roomName} onChange={(e) => setPropertyData({...propertyData, roomName: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>연락처</label>
+                <input type="text" placeholder="자동 입력되지만 수정 가능합니다" value={propertyData.agencyPhone} onChange={(e) => setPropertyData({...propertyData, agencyPhone: e.target.value})} />
               </div>
               <div className="form-group">
                 <label>방문시간</label>
@@ -119,17 +136,9 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                   {PROPERTY_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label>부동산</label>
                 <input type="text" value={propertyData.agency} onChange={(e) => setPropertyData({...propertyData, agency: e.target.value})} />
-              </div>
-              <div className="form-group">
-                <label>연락처</label>
-                <input type="text" placeholder="010-0000-0000" value={propertyData.agencyPhone} onChange={(e) => setPropertyData({...propertyData, agencyPhone: e.target.value})} />
-              </div>
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label>매물정보</label>
-                <textarea placeholder="매물의 상세 정보를 입력하세요 (예: 아파트 84㎡, 3층 2호실)" value={propertyData.info} onChange={handleInfoChange}></textarea>
               </div>
             </div>
             <div className="modal-footer">
@@ -284,13 +293,13 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
 
       const handleInfoChange = (e) => {
         const info = e.target.value;
-        const lines = info.split('\n');
-        const secondLine = lines.length > 1 ? lines[1].trim() : '';
+        const { propertyName, contactNumber } = parsePropertyDetails(info);
 
         setPropertyData({
           ...propertyData,
           info: info,
-          roomName: secondLine || propertyData.roomName
+          roomName: propertyName || propertyData.roomName,
+          agencyPhone: contactNumber || propertyData.agencyPhone
         });
       };
 
@@ -302,9 +311,25 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
               <button className="btn-close" onClick={onClose}>×</button>
             </div>
             <div className="form-grid">
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label>매물정보 (전체 텍스트 붙여넣기)</label>
+                <textarea
+                  className="large"
+                  placeholder="매물 정보를 붙여넣으세요&#10;2번째 줄 → 호실명 자동입력&#10;마지막 줄 → 연락처 자동입력"
+                  value={propertyData.info}
+                  onChange={handleInfoChange}
+                ></textarea>
+                <p className="form-hint">
+                  매물 정보를 붙여넣으면 2번째 줄이 호실명, 마지막 줄이 연락처로 자동 입력됩니다.
+                </p>
+              </div>
               <div className="form-group">
                 <label>호실명</label>
-                <input type="text" placeholder="예: 301호, 강남아파트" value={propertyData.roomName} onChange={(e) => setPropertyData({...propertyData, roomName: e.target.value})} />
+                <input type="text" placeholder="자동 입력되지만 수정 가능합니다" value={propertyData.roomName} onChange={(e) => setPropertyData({...propertyData, roomName: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>연락처</label>
+                <input type="text" placeholder="자동 입력되지만 수정 가능합니다" value={propertyData.agencyPhone} onChange={(e) => setPropertyData({...propertyData, agencyPhone: e.target.value})} />
               </div>
               <div className="form-group">
                 <label>방문시간</label>
@@ -316,17 +341,9 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                   {PROPERTY_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label>부동산</label>
                 <input type="text" value={propertyData.agency} onChange={(e) => setPropertyData({...propertyData, agency: e.target.value})} />
-              </div>
-              <div className="form-group">
-                <label>연락처</label>
-                <input type="text" placeholder="010-0000-0000" value={propertyData.agencyPhone} onChange={(e) => setPropertyData({...propertyData, agencyPhone: e.target.value})} />
-              </div>
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label>매물정보</label>
-                <textarea placeholder="매물의 상세 정보를 입력하세요 (예: 아파트 84㎡, 3층 2호실)" value={propertyData.info} onChange={handleInfoChange}></textarea>
               </div>
             </div>
             <div className="modal-footer">
