@@ -75,12 +75,13 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
 
       const handleInfoChange = (e) => {
         const info = e.target.value;
-        const { propertyName, contactNumber } = parsePropertyDetails(info);
+        const { propertyName, agencyName, contactNumber } = parsePropertyDetails(info);
 
         setPropertyData({
           ...propertyData,
           info: info,
           roomName: propertyName || propertyData.roomName,
+          agency: agencyName || propertyData.agency,
           agencyPhone: contactNumber || propertyData.agencyPhone
         });
       };
@@ -110,12 +111,12 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                 <label>매물정보 (전체 텍스트 붙여넣기)</label>
                 <textarea
                   className="large"
-                  placeholder="매물 정보를 붙여넣으세요&#10;2번째 줄 → 호실명 자동입력&#10;마지막 줄 → 연락처 자동입력"
+                  placeholder="매물 정보를 붙여넣으세요&#10;2번째 줄 → 호실명 자동입력&#10;7번째 줄 → 부동산 자동입력&#10;마지막 줄 → 연락처 자동입력"
                   value={propertyData.info}
                   onChange={handleInfoChange}
                 ></textarea>
                 <p className="form-hint">
-                  매물 정보를 붙여넣으면 2번째 줄이 호실명, 마지막 줄이 연락처로 자동 입력됩니다.
+                  매물 정보를 붙여넣으면 2번째 줄이 호실명, 7번째 줄이 부동산, 마지막 줄이 연락처로 자동 입력됩니다.
                 </p>
               </div>
               <div className="form-group">
@@ -186,7 +187,9 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                   </div>
                   <div className="property-card-footer">
                     <span className="property-detail">🏢 {prop.agency}</span>
-                    <span className="property-detail">📞 {prop.agencyPhone}</span>
+                    <span className="property-detail">
+                      📞 {prop.agencyPhone ? <a href={`sms:${prop.agencyPhone}`} style={{ color: 'inherit', textDecoration: 'underline' }}>{prop.agencyPhone}</a> : ''}
+                    </span>
                     <span className="property-detail">🕐 {prop.visitTime} 방문</span>
                   </div>
                   <div style={{ padding: '10px', borderTop: '1px solid #e0e0e0', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
@@ -293,12 +296,13 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
 
       const handleInfoChange = (e) => {
         const info = e.target.value;
-        const { propertyName, contactNumber } = parsePropertyDetails(info);
+        const { propertyName, agencyName, contactNumber } = parsePropertyDetails(info);
 
         setPropertyData({
           ...propertyData,
           info: info,
           roomName: propertyName || propertyData.roomName,
+          agency: agencyName || propertyData.agency,
           agencyPhone: contactNumber || propertyData.agencyPhone
         });
       };
@@ -315,12 +319,12 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                 <label>매물정보 (전체 텍스트 붙여넣기)</label>
                 <textarea
                   className="large"
-                  placeholder="매물 정보를 붙여넣으세요&#10;2번째 줄 → 호실명 자동입력&#10;마지막 줄 → 연락처 자동입력"
+                  placeholder="매물 정보를 붙여넣으세요&#10;2번째 줄 → 호실명 자동입력&#10;7번째 줄 → 부동산 자동입력&#10;마지막 줄 → 연락처 자동입력"
                   value={propertyData.info}
                   onChange={handleInfoChange}
                 ></textarea>
                 <p className="form-hint">
-                  매물 정보를 붙여넣으면 2번째 줄이 호실명, 마지막 줄이 연락처로 자동 입력됩니다.
+                  매물 정보를 붙여넣으면 2번째 줄이 호실명, 7번째 줄이 부동산, 마지막 줄이 연락처로 자동 입력됩니다.
                 </p>
               </div>
               <div className="form-group">
@@ -376,7 +380,9 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                   </div>
                   <div className="property-card-footer">
                     <span className="property-detail">🏢 {prop.agency}</span>
-                    <span className="property-detail">📞 {prop.agencyPhone}</span>
+                    <span className="property-detail">
+                      📞 {prop.agencyPhone ? <a href={`sms:${prop.agencyPhone}`} style={{ color: 'inherit', textDecoration: 'underline' }}>{prop.agencyPhone}</a> : ''}
+                    </span>
                     <span className="property-detail">🕐 {formatVisitTime(prop.visitTime)} 방문</span>
                   </div>
                   <div style={{ padding: '10px', borderTop: '1px solid #e0e0e0', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>

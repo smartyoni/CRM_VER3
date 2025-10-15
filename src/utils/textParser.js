@@ -19,6 +19,24 @@ export const extractPropertyName = (text) => {
 };
 
 /**
+ * 매물 정보 텍스트의 7번째 줄에서 부동산 이름 추출
+ * @param {string} text - 매물 정보 전체 텍스트
+ * @returns {string} - 추출된 부동산 이름
+ */
+export const extractAgencyName = (text) => {
+  if (!text) return '';
+
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+
+  // 7번째 줄 반환 (인덱스 6)
+  if (lines.length >= 7) {
+    return lines[6].trim();
+  }
+
+  return '';
+};
+
+/**
  * 매물 정보 텍스트의 마지막 줄에서 연락처 추출
  * @param {string} text - 매물 정보 전체 텍스트
  * @returns {string} - 추출된 연락처
@@ -37,13 +55,14 @@ export const extractContactNumber = (text) => {
 };
 
 /**
- * 매물 정보 텍스트 붙여넣기 시 자동으로 건물명과 연락처 추출
+ * 매물 정보 텍스트 붙여넣기 시 자동으로 건물명, 부동산, 연락처 추출
  * @param {string} text - 매물 정보 전체 텍스트
- * @returns {object} - { propertyName, contactNumber }
+ * @returns {object} - { propertyName, agencyName, contactNumber }
  */
 export const parsePropertyDetails = (text) => {
   return {
     propertyName: extractPropertyName(text),
+    agencyName: extractAgencyName(text),
     contactNumber: extractContactNumber(text)
   };
 };
