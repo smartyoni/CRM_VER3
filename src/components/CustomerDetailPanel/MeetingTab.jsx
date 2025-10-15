@@ -179,7 +179,18 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                 <div key={prop.id || index} className="property-card" style={{ marginBottom: '10px' }}>
                   <div className="property-card-header">
                     <div className="property-room-name">🏠 {prop.roomName || '미지정'}</div>
-                    <span className={`property-status-badge status-${prop.status}`}>{prop.status}</span>
+                    <select
+                      className={`property-status-badge status-${prop.status}`}
+                      value={prop.status}
+                      onChange={(e) => {
+                        const newProperties = [...formData.properties];
+                        newProperties[index] = {...newProperties[index], status: e.target.value};
+                        setFormData({...formData, properties: newProperties});
+                      }}
+                      style={{ cursor: 'pointer', border: 'none', fontWeight: 'bold' }}
+                    >
+                      {PROPERTY_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
                   <div className="property-card-body">
                     <div className="property-info-label">📋 매물정보</div>
@@ -190,7 +201,26 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                     <span className="property-detail">
                       📞 {prop.agencyPhone ? <a href={`sms:${prop.agencyPhone}`} style={{ color: 'inherit', textDecoration: 'underline' }}>{prop.agencyPhone}</a> : ''}
                     </span>
-                    <span className="property-detail">🕐 {prop.visitTime} 방문</span>
+                    <span className="property-detail" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      🕐
+                      <input
+                        type="time"
+                        value={prop.visitTime || ''}
+                        onChange={(e) => {
+                          const newProperties = [...formData.properties];
+                          newProperties[index] = {...newProperties[index], visitTime: e.target.value};
+                          setFormData({...formData, properties: newProperties});
+                        }}
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          padding: '2px 5px',
+                          borderRadius: '3px',
+                          fontSize: '13px',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      방문
+                    </span>
                   </div>
                   <div style={{ padding: '10px', borderTop: '1px solid #e0e0e0', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                     <button onClick={() => { setEditingPropertyIndex(index); setShowPropertyModal(true); }} className="btn-primary" style={{ fontSize: '12px', padding: '6px 12px' }}>수정</button>
@@ -372,7 +402,20 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                 <div key={prop.id} className="property-card" style={{ marginBottom: '15px' }}>
                   <div className="property-card-header">
                     <div className="property-room-name">🏠 {prop.roomName || '미지정'}</div>
-                    <span className={`property-status-badge status-${prop.status}`}>{prop.status}</span>
+                    <select
+                      className={`property-status-badge status-${prop.status}`}
+                      value={prop.status}
+                      onChange={(e) => {
+                        const newProperties = [...meeting.properties];
+                        newProperties[originalIndex] = {...newProperties[originalIndex], status: e.target.value};
+                        const updatedMeeting = {...meeting, properties: newProperties};
+                        onSaveMeeting(updatedMeeting);
+                        setViewingMeeting(updatedMeeting);
+                      }}
+                      style={{ cursor: 'pointer', border: 'none', fontWeight: 'bold' }}
+                    >
+                      {PROPERTY_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
                   <div className="property-card-body">
                     <div className="property-info-label">📋 매물정보</div>
@@ -383,7 +426,28 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
                     <span className="property-detail">
                       📞 {prop.agencyPhone ? <a href={`sms:${prop.agencyPhone}`} style={{ color: 'inherit', textDecoration: 'underline' }}>{prop.agencyPhone}</a> : ''}
                     </span>
-                    <span className="property-detail">🕐 {formatVisitTime(prop.visitTime)} 방문</span>
+                    <span className="property-detail" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      🕐
+                      <input
+                        type="time"
+                        value={prop.visitTime || ''}
+                        onChange={(e) => {
+                          const newProperties = [...meeting.properties];
+                          newProperties[originalIndex] = {...newProperties[originalIndex], visitTime: e.target.value};
+                          const updatedMeeting = {...meeting, properties: newProperties};
+                          onSaveMeeting(updatedMeeting);
+                          setViewingMeeting(updatedMeeting);
+                        }}
+                        style={{
+                          border: '1px solid #e0e0e0',
+                          padding: '2px 5px',
+                          borderRadius: '3px',
+                          fontSize: '13px',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      방문
+                    </span>
                   </div>
                   <div style={{ padding: '10px', borderTop: '1px solid #e0e0e0', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                     <button onClick={() => handlePropertyEdit(originalIndex)} className="btn-primary" style={{ fontSize: '12px', padding: '6px 12px' }}>수정</button>
