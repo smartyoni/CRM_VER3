@@ -37,18 +37,33 @@ export const extractAgencyName = (text) => {
 };
 
 /**
- * 매물 정보 텍스트의 마지막 줄에서 연락처 추출
+ * 매물 정보 텍스트의 마지막 줄에서 연락처(전화번호만) 추출
  * @param {string} text - 매물 정보 전체 텍스트
- * @returns {string} - 추출된 연락처
+ * @returns {string} - 추출된 전화번호
  */
 export const extractContactNumber = (text) => {
   if (!text) return '';
 
   const lines = text.split('\n').filter(line => line.trim() !== '');
 
-  // 마지막 줄 반환
+  // 마지막 줄에서 전화번호 패턴 추출
   if (lines.length > 0) {
-    return lines[lines.length - 1].trim();
+    const lastLine = lines[lines.length - 1].trim();
+
+    // 전화번호 패턴 매칭 (010-1234-5678, 01012345678, 02-123-4567 등)
+    // 숫자와 하이픈으로 이루어진 10~13자리 패턴 찾기
+    const phonePattern = /(\d{2,3}[-\s]?\d{3,4}[-\s]?\d{4})/;
+    const match = lastLine.match(phonePattern);
+
+    if (match) {
+      return match[0].trim();
+    }
+
+    // 패턴이 없으면 숫자와 하이픈만 추출
+    const numbersOnly = lastLine.replace(/[^\d-]/g, '');
+    if (numbersOnly.length >= 9) {
+      return numbersOnly;
+    }
   }
 
   return '';
