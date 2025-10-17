@@ -190,6 +190,8 @@ button {
 
 .customer-table tbody tr.selected {
   background-color: var(--status-new-bg);
+  outline: 3px solid var(--primary-blue);
+  outline-offset: -1px;
 }
 
 .customer-table td a {
