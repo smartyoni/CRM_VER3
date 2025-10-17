@@ -68,6 +68,27 @@ function App() {
     };
   }, []);
 
+  // 과거 미팅이 있는 고객을 자동으로 진행중으로 변경
+  useEffect(() => {
+    if (customers.length === 0 || meetings.length === 0) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    customers.forEach(customer => {
+      const customerMeetings = meetings.filter(m => m.customerId === customer.id);
+      const hasPastMeeting = customerMeetings.some(m => {
+        const meetingDate = new Date(m.date);
+        meetingDate.setHours(0, 0, 0, 0);
+        return meetingDate < today;
+      });
+
+      if (hasPastMeeting && customer.status === '신규') {
+        saveCustomer({ ...customer, status: '진행중' });
+      }
+    });
+  }, [customers, meetings]);
+
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
     setActiveProgressFilter(null); // 상태 변경 시 진행상황 필터 초기화
@@ -78,7 +99,12 @@ function App() {
   };
 
   const handleSelectCustomer = (customer) => {
-    setSelectedCustomerId(customer.id);
+    // 이미 선택된 고객을 다시 클릭하면 패널 닫기 (토글)
+    if (selectedCustomerId === customer.id) {
+      setSelectedCustomerId(null);
+    } else {
+      setSelectedCustomerId(customer.id);
+    }
   };
 
   const handleOpenModal = (customer = null) => {

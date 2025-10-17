@@ -218,7 +218,7 @@ button {
 }
 
 .detail-panel.open {
-  width: 675px;
+  width: 1350px;
 }
 
 .panel-header {
@@ -305,12 +305,14 @@ button {
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
+    margin-bottom: 20px;
 }
 
 .form-group label {
@@ -493,7 +495,7 @@ button {
   color: white;
 }
 
-.progress-tab.active:not(.progress-매물제안예정):not(.progress-매물제안중):not(.progress-미팅일확정):not(.progress-오늘미팅):not(.progress-접수후대기중) {
+.progress-tab.active:not(.progress-매물제안예정):not(.progress-매물제안중):not(.progress-미팅예정):not(.progress-접수후대기중) {
   background: var(--primary-blue);
   border-color: var(--primary-blue);
 }
@@ -508,14 +510,9 @@ button {
   border-color: #9b59b6;
 }
 
-.progress-tab.progress-미팅일확정.active {
+.progress-tab.progress-미팅예정.active {
   background: #f39c12;
   border-color: #f39c12;
-}
-
-.progress-tab.progress-오늘미팅.active {
-  background: #e74c3c;
-  border-color: #e74c3c;
 }
 
 .progress-tab.progress-접수후대기중.active {

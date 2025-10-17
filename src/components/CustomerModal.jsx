@@ -32,8 +32,8 @@ const CustomerModal = ({ isOpen, onClose, onSave, editData }) => {
     const { name, value } = e.target;
     const updates = { [name]: value };
 
-    // 상태가 계약완료 또는 포기로 변경되면 진행상황을 null로
-    if (name === 'status' && (value === '계약완료' || value === '포기')) {
+    // 상태가 보류로 변경되면 진행상황을 null로
+    if (name === 'status' && value === '보류') {
       updates.progress = null;
     }
 
@@ -67,36 +67,75 @@ const CustomerModal = ({ isOpen, onClose, onSave, editData }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <div className="modal-header">
+        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px', paddingBottom: '10px' }}>
           <h3>{editData ? '고객 수정' : '고객 추가'}</h3>
-          <button onClick={onClose} className="btn-close">✕</button>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <label style={{ fontSize: '14px', marginBottom: 0 }}>경로</label>
+            <select name="source" value={formData.source} onChange={handleChange} style={{ fontSize: '14px' }}>
+              {SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <label style={{ fontSize: '14px', marginBottom: 0 }}>종류</label>
+            <select name="propertyType" value={formData.propertyType} onChange={handleChange} style={{ fontSize: '14px' }}>
+              {PROPERTY_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <button onClick={onClose} className="btn-close">✕</button>
+          </div>
+        </div>
+        <div style={{ padding: '0 20px 15px 20px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+            <label style={{ fontSize: '14px', marginBottom: 0, minWidth: '60px' }}>상태</label>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              {STATUSES.map(status => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => handleChange({ target: { name: 'status', value: status } })}
+                  style={{
+                    fontSize: '13px',
+                    padding: '5px 12px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    backgroundColor: formData.status === status ? '#4CAF50' : 'white',
+                    color: formData.status === status ? 'white' : '#333',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+          {(formData.status === '신규' || formData.status === '진행중') && (
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <label style={{ fontSize: '14px', marginBottom: 0, minWidth: '60px' }}>진행상황</label>
+              <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                {PROGRESS_STATUSES.map(progress => (
+                  <button
+                    key={progress}
+                    type="button"
+                    onClick={() => handleChange({ target: { name: 'progress', value: progress } })}
+                    style={{
+                      fontSize: '13px',
+                      padding: '5px 12px',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      backgroundColor: formData.progress === progress ? '#2196F3' : 'white',
+                      color: formData.progress === progress ? 'white' : '#333',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {progress}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className="form-group">
             <label>고객명 *</label>
-            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="고객 이름 입력" required />
-        </div>
-        <div className="form-grid">
-            <div className="form-group">
-                <label>경로</label>
-                <select name="source" value={formData.source} onChange={handleChange}>{SOURCES.map(s => <option key={s} value={s}>{s}</option>)}</select>
-            </div>
-            <div className="form-group">
-                <label>매물종류</label>
-                <select name="propertyType" value={formData.propertyType} onChange={handleChange}>{PROPERTY_TYPES.map(p => <option key={p} value={p}>{p}</option>)}</select>
-            </div>
-            <div className="form-group">
-                <label>상태</label>
-                <select name="status" value={formData.status} onChange={handleChange}>{STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select>
-            </div>
-            {(formData.status === '신규' || formData.status === '진행중') && (
-              <div className="form-group">
-                  <label>진행상황</label>
-                  <select name="progress" value={formData.progress || ''} onChange={handleChange}>
-                    <option value="">선택 안 함</option>
-                    {PROGRESS_STATUSES.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-              </div>
-            )}
+            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="성별 선호매물 특징" required />
         </div>
         <div className="form-grid">
             <div className="form-group">
@@ -119,7 +158,7 @@ const CustomerModal = ({ isOpen, onClose, onSave, editData }) => {
             </div>
         </div>
         <div className="form-group">
-            <label>선호지역</label>
+            <label>금액 지역 상세정보</label>
             <textarea name="preferredArea" value={formData.preferredArea} onChange={handleChange} rows="2"></textarea>
         </div>
         <div className="form-group">

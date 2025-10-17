@@ -146,7 +146,7 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
             >
               희망월세{getSortIcon('hopefulMonthlyRent')}
             </th>
-            <th>선호지역</th>
+            <th>금액 지역 상세정보</th>
             <th
               onClick={() => handleSort('moveInDate')}
               style={{ cursor: 'pointer', userSelect: 'none' }}

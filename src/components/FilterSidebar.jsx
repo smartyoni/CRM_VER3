@@ -87,14 +87,15 @@ const FilterSidebar = ({ activeFilter, onFilterChange, customers, meetings, acti
 
   const allStatuses = [
     '전체',
-    ...STATUSES,
+    ...STATUSES.filter(s => s !== '보류'),
     '오늘미팅',
     '미팅일확정',
     '오늘접촉',
     '연락할고객',
     '일주일무접촉',
     '신규무접촉',
-    '진행중무접촉'
+    '진행중무접촉',
+    '보류'
   ];
 
   const handleFilterClick = (status) => {
