@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { PROGRESS_STATUSES } from '../constants';
 
-const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selectedCustomerId, activeFilter, activeProgressFilter, onProgressFilterChange, allCustomers }) => {
+const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selectedCustomerId, activeFilter, activeProgressFilter, onProgressFilterChange, allCustomers, onFavoriteCustomer }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, selectedCustomer: null });
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
@@ -14,6 +14,10 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
 
     // 정렬 적용
     const sorted = [...filtered].sort((a, b) => {
+      // 즐겨찾기된 고객을 먼저 표시
+      if (a.isFavorite && !b.isFavorite) return -1;
+      if (!a.isFavorite && b.isFavorite) return 1;
+
       const aValue = a[sortConfig.key];
       const bValue = b[sortConfig.key];
 
@@ -50,16 +54,9 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
     setContextMenu({ ...contextMenu, visible: false });
   };
 
-  const handleEdit = () => {
+  const handleFavorite = () => {
     if (contextMenu.selectedCustomer) {
-      onEdit(contextMenu.selectedCustomer);
-    }
-    handleCloseContextMenu();
-  };
-
-  const handleDelete = () => {
-    if (contextMenu.selectedCustomer) {
-      onDelete(contextMenu.selectedCustomer);
+      onFavoriteCustomer(contextMenu.selectedCustomer);
     }
     handleCloseContextMenu();
   };
@@ -102,13 +99,19 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
     }
   };
 
-  // 접수일을 MM-DD 형식으로 포맷
+  // 접수일을 M월D일 형식으로 포맷
   const formatCreatedDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${month}-${day}`;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}월${day}일`;
+  };
+
+  // 특정 날짜에 접수된 고객 수 계산
+  const getCustomerCountByDate = (dateString) => {
+    const formattedDate = formatCreatedDate(dateString);
+    return filteredCustomers.filter(c => formatCreatedDate(c.createdAt) === formattedDate).length;
   };
 
   // 같은 날짜의 고객이 연속으로 몇 명인지 계산 (rowspan 용)
@@ -148,6 +151,23 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
   // 날짜 셀 배경색 (교차)
   const getDateCellColor = (groupIndex) => {
     return groupIndex % 2 === 0 ? '#fafafa' : '#f0f4ff';
+  };
+
+  // 날짜 그룹 간 여백 스타일 계산
+  const getDateGroupSpacingStyle = (customer, index) => {
+    if (index === 0) return {};
+
+    const currentDate = formatCreatedDate(customer.createdAt);
+    const prevDate = formatCreatedDate(filteredCustomers[index - 1].createdAt);
+
+    // 이전 고객과 날짜가 다르면 여백 추가
+    if (prevDate !== currentDate) {
+      return {
+        borderTop: '12px solid white'
+      };
+    }
+
+    return {};
   };
 
   return (
@@ -208,7 +228,6 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
             >
               접수일{getSortIcon('createdAt')}
             </th>
-            <th>매물종류</th>
             <th
               onClick={() => handleSort('name')}
               style={{ cursor: 'pointer', userSelect: 'none' }}
@@ -217,6 +236,13 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
               고객명{getSortIcon('name')}
             </th>
             <th>연락처</th>
+            <th
+              onClick={() => handleSort('moveInDate')}
+              style={{ cursor: 'pointer', userSelect: 'none' }}
+              title="클릭하여 정렬"
+            >
+              입주희망일{getSortIcon('moveInDate')}
+            </th>
             <th
               onClick={() => handleSort('hopefulDeposit')}
               style={{ cursor: 'pointer', userSelect: 'none' }}
@@ -232,27 +258,28 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
               희망월세{getSortIcon('hopefulMonthlyRent')}
             </th>
             <th>금액 지역 상세정보</th>
-            <th
-              onClick={() => handleSort('moveInDate')}
-              style={{ cursor: 'pointer', userSelect: 'none' }}
-              title="클릭하여 정렬"
-            >
-              입주희망일{getSortIcon('moveInDate')}
-            </th>
-            <th>상태</th>
+            <th>매물종류</th>
           </tr>
         </thead>
         <tbody>
           {filteredCustomers.map((customer, index) => {
             const rowSpan = getDateRowSpan(customer, index);
             const dateGroupIndex = getDateGroupIndex(customer, index);
+            const spacingStyle = getDateGroupSpacingStyle(customer, index);
             return (
               <tr
                 key={customer.id}
                 className={selectedCustomerId === customer.id ? 'selected' : ''}
                 onClick={() => onSelectCustomer(customer)}
                 onContextMenu={(e) => handleContextMenu(e, customer)}
-                style={{ backgroundColor: getPropertyTypeColor(customer.propertyType) }}
+                style={{
+                  backgroundColor: customer.isFavorite
+                    ? 'rgba(156, 39, 176, 0.15)'
+                    : getPropertyTypeColor(customer.propertyType),
+                  borderLeft: customer.isFavorite ? '3px solid #9C27B0' : 'none',
+                  boxShadow: customer.isFavorite ? '0 2px 4px rgba(156, 39, 176, 0.3)' : 'none',
+                  ...spacingStyle
+                }}
               >
                 {rowSpan > 0 && (
                   <td
@@ -264,17 +291,19 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
                       fontWeight: '500'
                     }}
                   >
-                    {formatCreatedDate(customer.createdAt)}
+                    {formatCreatedDate(customer.createdAt)}({getCustomerCountByDate(customer.createdAt)}명)
                   </td>
                 )}
-                <td>{customer.propertyType}</td>
-                <td className="customer-name" title={customer.name}>{customer.name}</td>
+                <td className="customer-name" title={customer.name}>
+                  {customer.isFavorite && <span style={{ marginRight: '6px', color: '#9C27B0' }}>⭐</span>}
+                  {customer.name}
+                </td>
                 <td><a href={`sms:${customer.phone}`}>{customer.phone}</a></td>
+                <td>{customer.moveInDate}</td>
                 <td>{customer.hopefulDeposit ? `${customer.hopefulDeposit}만원` : '-'}</td>
                 <td>{customer.hopefulMonthlyRent ? `${customer.hopefulMonthlyRent}만원` : '-'}</td>
                 <td className="preferred-area" title={customer.preferredArea}>{customer.preferredArea}</td>
-                <td>{customer.moveInDate}</td>
-                <td>{customer.status}</td>
+                <td>{customer.propertyType}</td>
               </tr>
             );
           })}
@@ -283,8 +312,9 @@ const CustomerTable = ({ customers, onSelectCustomer, onEdit, onDelete, selected
       {contextMenu.visible && (
         <div style={{ top: contextMenu.y, left: contextMenu.x, position: 'absolute', zIndex: 100, background: 'white', border: '1px solid #ccc', borderRadius: '5px', padding: '5px' }}>
           <ul style={{ listStyle: 'none', margin: 0, padding: '5px' }}>
-            <li style={{ padding: '8px', cursor: 'pointer' }} onClick={handleEdit}>수정</li>
-            <li style={{ padding: '8px', cursor: 'pointer' }} onClick={handleDelete}>삭제</li>
+            <li style={{ padding: '8px', cursor: 'pointer' }} onClick={handleFavorite}>
+              {contextMenu.selectedCustomer?.isFavorite ? '⭐ 즐겨찾기 취소' : '☆ 즐겨찾기 추가'}
+            </li>
           </ul>
         </div>
       )}

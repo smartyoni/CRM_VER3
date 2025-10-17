@@ -3,7 +3,7 @@ import { PROPERTY_STATUSES } from '../../constants';
 import { generateId, formatDateTime } from '../../utils/helpers';
 import { parsePropertyDetails } from '../../utils/textParser';
 
-const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) => {
+const MeetingTab = ({ customerId, customerName, meetings, onSaveMeeting, onDeleteMeeting }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState(null);
   const [viewingMeeting, setViewingMeeting] = useState(null);
@@ -24,7 +24,7 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
       // 추가 모드
       return {
         date: new Date().toISOString().slice(0, 10),
-        time: new Date().toTimeString().slice(0, 5),
+        time: '12:00',
         properties: []
       };
     };
@@ -155,7 +155,7 @@ const MeetingTab = ({ customerId, meetings, onSaveMeeting, onDeleteMeeting }) =>
         <div className="modal-overlay" onClick={onCancel}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>미팅 추가 - 여의도근무 여성분(렌코양창룸방)</h3>
+              <h3>미팅 추가 - {customerName ? customerName.slice(0, 30) : ''}</h3>
               <button className="btn-close" onClick={onCancel}>×</button>
             </div>
             <div className="form-grid">

@@ -126,6 +126,14 @@ function App() {
     // Firestore 실시간 구독이 자동으로 state 업데이트
   };
 
+  const handleFavoriteCustomer = async (customer) => {
+    const updatedCustomer = {
+      ...customer,
+      isFavorite: !customer.isFavorite
+    };
+    await saveCustomer(updatedCustomer);
+  };
+
   const handleDeleteCustomer = async (customer) => {
     if (confirm(`"${customer.name}" 고객을 정말 삭제하시겠습니까?`)) {
       await deleteCustomer(customer.id);
@@ -210,11 +218,39 @@ function App() {
     return Math.floor(diff / (1000 * 60 * 60 * 24));
   };
 
+  // 필터 설명 함수
+  const getFilterDescription = (filter) => {
+    const descriptions = {
+      '전체': '등록된 모든 고객을 표시합니다',
+      '신규': '상태가 신규로 설정된 고객들을 표시합니다',
+      '진행중': '상태가 진행중으로 설정된 고객들을 표시합니다',
+      '장기관리고객': '장기적으로 관리 중인 고객들을 표시합니다',
+      '보류': '상태가 보류로 설정된 고객들을 표시합니다',
+      '집중고객': '즐겨찾기로 표시된 고객들을 집중적으로 관리하기 위해 표시합니다',
+      '오늘미팅': '오늘 일정이 확정된 미팅이 있는 고객들을 표시합니다',
+      '미팅일확정': '오늘 이후로 미팅이 예정된 고객들을 표시합니다',
+      '오늘연락': '오늘 활동 기록(전화, 문자, 방문 등)이 있는 고객들을 표시합니다',
+      '어제연락': '어제 활동 기록(전화, 문자, 방문 등)이 있는 고객들을 표시합니다',
+      '연락할고객': '어제와 오늘 모두 활동 기록이 없는 고객들입니다 (보류 상태 제외). 마지막 연락일이 오래된 순으로 정렬됩니다'
+    };
+    return descriptions[filter] || '';
+  };
+
   const filteredCustomers = (() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     let filtered = customers.filter(customer => {
+      // 집중고객 필터
+      if (activeFilter === '집중고객') {
+        return customer.isFavorite;
+      }
+
+      // 장기관리고객 필터
+      if (activeFilter === '장기관리고객') {
+        return customer.status === '장기관리고객';
+      }
+
       // 오늘미팅 필터
       if (activeFilter === '오늘미팅') {
         const customerMeetings = meetings.filter(m => m.customerId === customer.id);
@@ -235,41 +271,43 @@ function App() {
         });
       }
 
-      // 오늘접촉 필터
-      if (activeFilter === '오늘접촉') {
-        const lastActivity = getLastActivityDate(customer.id);
-        if (!lastActivity) return false;
-        const activityDate = new Date(lastActivity);
-        activityDate.setHours(0, 0, 0, 0);
-        return activityDate.getTime() === today.getTime();
+      // 오늘연락 필터
+      if (activeFilter === '오늘연락') {
+        const customerActivities = activities.filter(a => a.customerId === customer.id);
+        return customerActivities.some(a => {
+          const activityDate = new Date(a.date);
+          activityDate.setHours(0, 0, 0, 0);
+          return activityDate.getTime() === today.getTime();
+        });
       }
 
-      // 연락할고객 필터 (2일 이상 미접촉)
+      // 어제연락 필터
+      if (activeFilter === '어제연락') {
+        const customerActivities = activities.filter(a => a.customerId === customer.id);
+        return customerActivities.some(a => {
+          const activityDate = new Date(a.date);
+          activityDate.setHours(0, 0, 0, 0);
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+          return activityDate.getTime() === yesterday.getTime();
+        });
+      }
+
+      // 연락할고객 필터 (어제, 오늘 활동 기록 없음, 보류 상태 제외)
       if (activeFilter === '연락할고객') {
-        const lastActivity = getLastActivityDate(customer.id);
-        if (!lastActivity) return false;
-        return getDaysDiff(today, lastActivity) >= 2;
+        if (customer.status === '보류') return false;
+        const customerActivities = activities.filter(a => a.customerId === customer.id);
+        const today2 = new Date(today);
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        return !customerActivities.some(a => {
+          const activityDate = new Date(a.date);
+          activityDate.setHours(0, 0, 0, 0);
+          return activityDate.getTime() === today2.getTime() || activityDate.getTime() === yesterday.getTime();
+        });
       }
 
-      // 일주일무접촉 필터
-      if (activeFilter === '일주일무접촉') {
-        const lastActivity = getLastActivityDate(customer.id);
-        if (!lastActivity) return false;
-        return getDaysDiff(today, lastActivity) >= 7;
-      }
-
-      // 신규무접촉 필터
-      if (activeFilter === '신규무접촉') {
-        return customer.status === '신규' && activities.filter(a => a.customerId === customer.id).length === 0;
-      }
-
-      // 진행중무접촉 필터 (3일 이상 활동 없음)
-      if (activeFilter === '진행중무접촉') {
-        if (customer.status !== '진행중') return false;
-        const lastActivity = getLastActivityDate(customer.id);
-        if (!lastActivity) return true;
-        return getDaysDiff(today, lastActivity) >= 3;
-      }
 
       // 기존 상태 필터
       const statusMatch = activeFilter === '전체' || customer.status === activeFilter;
@@ -321,17 +359,38 @@ function App() {
 
         return new Date(aNextMeeting.date) - new Date(bNextMeeting.date);
       });
-    } else if (activeFilter === '오늘접촉') {
-      // 오늘접촉 필터: 최근 활동시간순 정렬
+    } else if (activeFilter === '오늘연락') {
+      // 오늘연락 필터: 활동 시간순 정렬
       filtered.sort((a, b) => {
-        const aLastActivity = getLastActivityDate(a.id);
-        const bLastActivity = getLastActivityDate(b.id);
-        if (!aLastActivity) return 1;
-        if (!bLastActivity) return -1;
-        return bLastActivity - aLastActivity;
+        const aActivities = activities.filter(act => act.customerId === a.id && new Date(act.date).toDateString() === today.toDateString());
+        const bActivities = activities.filter(act => act.customerId === b.id && new Date(act.date).toDateString() === today.toDateString());
+
+        if (aActivities.length === 0) return 1;
+        if (bActivities.length === 0) return -1;
+
+        const aLatestActivity = aActivities.sort((act1, act2) => new Date(act2.date) - new Date(act1.date))[0];
+        const bLatestActivity = bActivities.sort((act1, act2) => new Date(act2.date) - new Date(act1.date))[0];
+
+        return new Date(bLatestActivity.date) - new Date(aLatestActivity.date);
       });
-    } else if (activeFilter === '연락할고객' || activeFilter === '일주일무접촉' || activeFilter === '진행중무접촉') {
-      // 미접촉 필터들: 마지막 활동일이 오래된 순 정렬
+    } else if (activeFilter === '어제연락') {
+      // 어제연락 필터: 어제 활동 시간순 정렬
+      filtered.sort((a, b) => {
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const aActivities = activities.filter(act => act.customerId === a.id && new Date(act.date).toDateString() === yesterday.toDateString());
+        const bActivities = activities.filter(act => act.customerId === b.id && new Date(act.date).toDateString() === yesterday.toDateString());
+
+        if (aActivities.length === 0) return 1;
+        if (bActivities.length === 0) return -1;
+
+        const aLatestActivity = aActivities.sort((act1, act2) => new Date(act2.date) - new Date(act1.date))[0];
+        const bLatestActivity = bActivities.sort((act1, act2) => new Date(act2.date) - new Date(act1.date))[0];
+
+        return new Date(bLatestActivity.date) - new Date(aLatestActivity.date);
+      });
+    } else if (activeFilter === '연락할고객') {
+      // 연락할고객 필터: 마지막 활동일이 오래된 순 정렬
       filtered.sort((a, b) => {
         const aLastActivity = getLastActivityDate(a.id);
         const bLastActivity = getLastActivityDate(b.id);
@@ -339,9 +398,6 @@ function App() {
         if (!bLastActivity) return -1;
         return aLastActivity - bLastActivity;
       });
-    } else if (activeFilter === '신규무접촉') {
-      // 신규무접촉 필터: 고객 등록일순 정렬
-      filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     }
 
     return filtered;
@@ -371,7 +427,14 @@ function App() {
           <button className="hamburger-btn" onClick={() => setIsMobileSidebarOpen(true)}>
             ☰
           </button>
-          <h1>고객 목록</h1>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <h1>고객 목록</h1>
+            {activeFilter !== '전체' && (
+              <span style={{ fontSize: '13px', color: '#7f8c8d' }}>
+                필터: {activeFilter} - {getFilterDescription(activeFilter)}
+              </span>
+            )}
+          </div>
           <div className="header-actions">
             <button onClick={() => handleOpenModal()} className="btn-primary">+ 고객 추가</button>
             <button onClick={handleBackup} className="btn-secondary">백업</button>
@@ -390,6 +453,7 @@ function App() {
             activeProgressFilter={activeProgressFilter}
             onProgressFilterChange={handleProgressFilterChange}
             allCustomers={customers}
+            onFavoriteCustomer={handleFavoriteCustomer}
           />
         </main>
       </div>
@@ -398,6 +462,7 @@ function App() {
         selectedCustomer={selectedCustomer}
         onClose={() => setSelectedCustomerId(null)}
         onEditCustomer={handleOpenModal}
+        onUpdateCustomer={handleSaveCustomer}
         onDeleteCustomer={handleDeleteCustomer}
         activities={activities}
         onSaveActivity={handleSaveActivity}

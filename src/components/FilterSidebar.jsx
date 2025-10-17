@@ -23,6 +23,14 @@ const FilterSidebar = ({ activeFilter, onFilterChange, customers, meetings, acti
     if (status === '전체') return customers.length;
 
     // 미팅 기반 필터
+    if (status === '집중고객') {
+      return customers.filter(c => c.isFavorite).length;
+    }
+
+    if (status === '장기관리고객') {
+      return customers.filter(c => c.status === '장기관리고객').length;
+    }
+
     if (status === '오늘미팅') {
       return customers.filter(c => {
         const customerMeetings = meetings.filter(m => m.customerId === c.id);
@@ -45,40 +53,41 @@ const FilterSidebar = ({ activeFilter, onFilterChange, customers, meetings, acti
     }
 
     // 활동 기반 필터
-    if (status === '오늘접촉') {
+    if (status === '오늘연락') {
       return customers.filter(c => {
-        const lastActivity = getLastActivityDate(c.id);
-        if (!lastActivity) return false;
-        const activityDate = new Date(lastActivity);
-        activityDate.setHours(0, 0, 0, 0);
-        return activityDate.getTime() === today.getTime();
+        const customerActivities = activities.filter(a => a.customerId === c.id);
+        return customerActivities.some(a => {
+          const activityDate = new Date(a.date);
+          activityDate.setHours(0, 0, 0, 0);
+          return activityDate.getTime() === today.getTime();
+        });
+      }).length;
+    }
+    if (status === '어제연락') {
+      return customers.filter(c => {
+        const customerActivities = activities.filter(a => a.customerId === c.id);
+        return customerActivities.some(a => {
+          const activityDate = new Date(a.date);
+          activityDate.setHours(0, 0, 0, 0);
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+          return activityDate.getTime() === yesterday.getTime();
+        });
       }).length;
     }
     if (status === '연락할고객') {
       return customers.filter(c => {
-        const lastActivity = getLastActivityDate(c.id);
-        if (!lastActivity) return false;
-        return getDaysDiff(today, lastActivity) >= 2;
-      }).length;
-    }
-    if (status === '일주일무접촉') {
-      return customers.filter(c => {
-        const lastActivity = getLastActivityDate(c.id);
-        if (!lastActivity) return false;
-        return getDaysDiff(today, lastActivity) >= 7;
-      }).length;
-    }
-    if (status === '신규무접촉') {
-      return customers.filter(c => {
-        return c.status === '신규' && activities.filter(a => a.customerId === c.id).length === 0;
-      }).length;
-    }
-    if (status === '진행중무접촉') {
-      return customers.filter(c => {
-        if (c.status !== '진행중') return false;
-        const lastActivity = getLastActivityDate(c.id);
-        if (!lastActivity) return true;
-        return getDaysDiff(today, lastActivity) >= 3;
+        if (c.status === '보류') return false;
+        const customerActivities = activities.filter(a => a.customerId === c.id);
+        const today2 = new Date(today);
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        return !customerActivities.some(a => {
+          const activityDate = new Date(a.date);
+          activityDate.setHours(0, 0, 0, 0);
+          return activityDate.getTime() === today2.getTime() || activityDate.getTime() === yesterday.getTime();
+        });
       }).length;
     }
 
@@ -87,15 +96,16 @@ const FilterSidebar = ({ activeFilter, onFilterChange, customers, meetings, acti
 
   const allStatuses = [
     '전체',
-    ...STATUSES.filter(s => s !== '보류'),
+    '보류',
+    '신규',
+    '진행중',
+    '장기관리고객',
+    '집중고객',
     '오늘미팅',
     '미팅일확정',
-    '오늘접촉',
-    '연락할고객',
-    '일주일무접촉',
-    '신규무접촉',
-    '진행중무접촉',
-    '보류'
+    '오늘연락',
+    '어제연락',
+    '연락할고객'
   ];
 
   const handleFilterClick = (status) => {

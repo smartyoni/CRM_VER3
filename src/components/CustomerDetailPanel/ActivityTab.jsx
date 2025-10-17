@@ -507,7 +507,7 @@ const ActivityTab = ({ customerId, activities, onSaveActivity, onDeleteActivity 
                     }}
                     title={getLatestFollowUp(activity)}
                   >
-                    {truncateText(getLatestFollowUp(activity), 60)}
+                    {truncateText(getLatestFollowUp(activity), 50)}
                   </td>
                 </tr>
               ))}

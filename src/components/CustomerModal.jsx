@@ -15,8 +15,8 @@ const CustomerModal = ({ isOpen, onClose, onSave, editData }) => {
     hopefulMonthlyRent: editData?.hopefulMonthlyRent || '',
     moveInDate: editData?.moveInDate || '',
     memo: editData?.memo || '',
-    status: editData?.status || STATUSES[0],
-    progress: editData?.progress || null,
+    status: editData?.status || '신규',
+    progress: editData?.progress || '매물제안예정',
     createdAt: editData?.createdAt || new Date().toISOString(),
   });
 
@@ -30,14 +30,7 @@ const CustomerModal = ({ isOpen, onClose, onSave, editData }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const updates = { [name]: value };
-
-    // 상태가 보류로 변경되면 진행상황을 null로
-    if (name === 'status' && value === '보류') {
-      updates.progress = null;
-    }
-
-    setFormData(prev => ({ ...prev, ...updates }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handlePhoneChange = (e) => {
@@ -80,58 +73,6 @@ const CustomerModal = ({ isOpen, onClose, onSave, editData }) => {
             </select>
             <button onClick={onClose} className="btn-close">✕</button>
           </div>
-        </div>
-        <div style={{ padding: '0 20px 15px 20px' }}>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-            <label style={{ fontSize: '14px', marginBottom: 0, minWidth: '60px' }}>상태</label>
-            <div style={{ display: 'flex', gap: '5px' }}>
-              {STATUSES.map(status => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => handleChange({ target: { name: 'status', value: status } })}
-                  style={{
-                    fontSize: '13px',
-                    padding: '5px 12px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    backgroundColor: formData.status === status ? '#4CAF50' : 'white',
-                    color: formData.status === status ? 'white' : '#333',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
-          </div>
-          {(formData.status === '신규' || formData.status === '진행중') && (
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <label style={{ fontSize: '14px', marginBottom: 0, minWidth: '60px' }}>진행상황</label>
-              <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                {PROGRESS_STATUSES.map(progress => (
-                  <button
-                    key={progress}
-                    type="button"
-                    onClick={() => handleChange({ target: { name: 'progress', value: progress } })}
-                    style={{
-                      fontSize: '13px',
-                      padding: '5px 12px',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                      backgroundColor: formData.progress === progress ? '#2196F3' : 'white',
-                      color: formData.progress === progress ? 'white' : '#333',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {progress}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
         <div className="form-group">
             <label>고객명 *</label>
